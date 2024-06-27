@@ -1,34 +1,40 @@
 onmessage = function(e) {
-	console.log("worker received", e.data)
-	
 	
 	self.importScripts('https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.15/paper-full.min.js')
 	self.importScripts('https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js')
 	self.importScripts('/node_modules/seedrandom/seedrandom.min.js')
 	
 	paper.install(this)
-	paper.setup(new Size(1000, 1000));
+	paper.setup(new Size(400, 400));
+	paper.project.clear()
 	
-	console.log("initializing with", e.data.uid, e.data.tapcount)
+	this.sticker = false
+	if(e.data.tapcount < 1){
+		console.log("STICKER TIME")
+		this.sticker = true
+	}
+	
+	console.log("initializing with", e.data.uid, e.data.tapcount, e.data.tapcount < 1)
 	let IDrng = new Math.seedrandom(e.data.uid)
-	let TAPrng = new Math.seedrandom(e.data.tapcount)
+	let TAPrng = new Math.seedrandom(e.data.uid + e.data.tapcount)
 	
-	console.log(IDrng())
+	let gridgap = IDrng()*130 + 70 //100-300
+	let lineWidth = 4 + IDrng() * gridgap/4
 	
-	let gridgap = IDrng()*100 + 100 //100-300
-	let lineWidth = 15 + IDrng() * 15
 	let circleRadius = (gridgap - (lineWidth*3))/2
 	let lineRadius = (gridgap - lineWidth)/2
 	let mainColor = new Color(IDrng(), IDrng(), IDrng())
 	let col1 = new Color(IDrng(), IDrng(), IDrng())
 	let col2 = new Color(IDrng(), IDrng(), IDrng())
 
-	let rot1 = IDrng()*45
-	let rot2 = rot1 + 30 + IDrng()*90
+	let rot1 = IDrng()*360
+	let rot2 = rot1 + 20 + IDrng()*120
 	
 	
 	let mainShape = createBigShape(rot1, rot2)
 	mainShape.fillColor = mainColor
+	
+	let ref = mainShape.clone()
 	
 	let g = new Group([
 		mainShape,
@@ -39,31 +45,134 @@ onmessage = function(e) {
 	g.clipped = true;
 	
 	
-	postMessage({svg: paper.project.exportJSON()});
+	
+	
+	postMessage({svg: paper.project.exportJSON(), mainColor: mainColor.toCSS(), col1: col1.toCSS(), col2:col2.toCSS()});
+	
+	function createBigCutout(rot, rot2, mainShape, flip1, flip2){
+		let l = (lineWidth + lineRadius*2) 
+		let dir1 = new Point(0,1).normalize(l / Math.sin( (rot2-rot)* Math.PI / 180  )).rotate(rot) 
+		let dir2 = new Point(0,1).normalize(l / Math.sin( (rot2-rot)* Math.PI / 180  )).rotate(rot2) 
+		
+		let point = new Point(mainShape.position)
+		point = point.add(dir1.multiply(Math.round(TAPrng()*4 -2)) )
+		point = point.add(dir2.multiply(Math.round(TAPrng()*4 -2)) )
+		
+		if(mainShape.contains(point)){
+			let shapes = [
+				createCutout(dir1, dir2, point, mainShape, 1, 1),
+				createCutout(dir1, dir2, point, mainShape, 1, -1),
+				createCutout(dir1, dir2, point, mainShape, -1, 1),
+				createCutout(dir1, dir2, point, mainShape, -1, -1)
+			]
+			
+			shapes = shapes.filter( s => s!=null)
+			shapes.forEach( s => s.remove())
+			shapes = shapes.map( s => s.intersect(mainShape))
+			shapes.sort( (a,b) => b.area - a.area)
+			let fin = shapes.pop()
+			
+			return fin
+		}
+		return null
+	}
+	
+	function createCutout(dir1, dir2, point, mainShape, flip1, flip2){
+		let c = new Path.Circle(point, circleRadius)
+		c.fillColor = 'black'
+		//c.remove()
+		
+		let p = c.getOffsetsWithTangent(dir1)
+		let p2 = c.getOffsetsWithTangent(dir2)
+		console.log(p)
+		let lines = [
+			new Path.Line(c.getPointAt(p[0]), c.getPointAt(p[0]).add(dir1.multiply(5*flip1))),
+			new Path.Line(c.getPointAt(p[1]), c.getPointAt(p[1]).add(dir1.multiply(5*flip1))),
+			new Path.Line(c.getPointAt(p2[0]), c.getPointAt(p2[0]).add(dir2.multiply(5*flip2))),
+			new Path.Line(c.getPointAt(p2[1]), c.getPointAt(p2[1]).add(dir2.multiply(5*flip2)))
+		]
+		lines.forEach( l => l.remove() )
+		
+		
+		lines = findNonIntersectingLines(lines)
+		let shape = new Path()
+		shape.add(lines[0].firstSegment.point)
+		shape.add(lines[0].lastSegment.point)
+		shape.add(lines[1].lastSegment.point)
+		shape.add(lines[1].firstSegment.point)
+		shape.fillColor = "black"
+		shape.remove()
+		
+		c.scale(1.001)
+		shape = c.unite(shape)
+		c.remove()
+		
+		if(mainShape.intersects(shape)){
+			//ref.clone()
+			//fin = ref.intersect(shape)
+			//fin.fillColor = 'red'
+			//shape.remove()
+			
+			return shape
+		}
+		return null
+		//let fin = mainShape.intersect(shape)
+		//shape.remove()
+		
+	}
+	
+	function findNonIntersectingLines(arr){
+		for(let l1 = 0; l1<arr.length; l1++){
+			for(let l2 = l1+1; l2<arr.length; l2++){
+				if(arr[l1].intersects(arr[l2])){
+					console.log("intersect", l1, l2)
+					return arr.filter((x, idx) => idx != l1 && idx != l2 )
+				}
+			}
+			
+		}
+	}
 	
 	function createBigShape(rot, rot2){
 		let r = new Rectangle([0,0], [400,400])
 		let outerRect = new Path.Rectangle(r, circleRadius)
 		outerRect.position = view.center
 		
-		let deco = []
-		for(let i = 0; i<8; i++){
-			let line 
-			if(TAPrng() < 0.5){
-				line = thinLine(rot, rot2)
-			}else{
-				line = thinLine(rot2, rot)
+		if(!this.sticker){
+			
+			let deco = []
+			
+			let cuto = createBigCutout(rot1, rot2, outerRect)
+			let cuto2 = createBigCutout(rot1, rot2, outerRect)
+			if(cuto && cuto.area < outerRect.area/5){
+				deco.push(cuto)
 			}
-			line.fillColor = "blue"
-			if(intersectsCorrect(line, outerRect, deco)){
-				deco.push(line)
-			}else{
-				line.remove()
+			
+			if(cuto2 && cuto2.area < outerRect.area/5 && !cuto2.intersects(cuto)){
+				deco.push(cuto2)
 			}
+			
+			
+			for(let i = 0; i<TAPrng()*4+1; i++){
+				let line 
+				if(TAPrng() < 0.5){
+					line = thinLine(rot, rot2)
+				}else{
+					line = thinLine(rot2, rot)
+				}
+				if(intersectsCorrect(line, outerRect, deco)){
+					deco.push(line)
+				}else{
+					line.remove()
+					i--
+					//line.fillColor = "black"
+				}
+			}
+			
+			let shape = cut(outerRect, deco)
+			return shape
 		}
-		
-		let shape = cut(outerRect, deco)
-		return shape
+		return outerRect
 	}
 	
 	function cut(rect, deco){
@@ -84,8 +193,7 @@ onmessage = function(e) {
 			return false
 		}
 		for(let d of deco){
-			let decoInters = elem.getIntersections(d)
-			if(decoInters.length > 0){
+			if(elem.intersects(d)){
 				return false
 			}
 		}
@@ -93,7 +201,7 @@ onmessage = function(e) {
 	}
 
 	function thinLine(rot, rot2){
-		let l = (lineWidth + lineRadius*2) /2
+		let l = (lineWidth + lineRadius*2) 
 		let dir1 = new Point(0,1).normalize(l / Math.sin( (rot2-rot)* Math.PI / 180  )).rotate(rot) 
 		let dir2 = new Point(0,1).normalize(l / Math.sin( (rot2-rot)* Math.PI / 180  )).rotate(rot2) 
 		
@@ -101,24 +209,21 @@ onmessage = function(e) {
 		line.pivot = line.bounds.leftCenter
 		line.rotate(dir1.angle)
 		line.position = view.center
-		line.translate(dir1.multiply(Math.round(TAPrng()*2)))
-		line.translate(dir2.multiply(Math.round(TAPrng()*2)))
+		line.translate(dir1.multiply(Math.round(TAPrng()*3)))
+		line.translate(dir2.multiply(Math.round(TAPrng()*3)))
 		line.strokeColor = "blue"
 		if(TAPrng()<0.5){
 			line.rotate(180)
 		}
 
 		let c
-		let endType = Math.floor(TAPrng()*3)
+		let endType = Math.floor(TAPrng()*2)
 		switch(endType){
 			case 0:
 				c = new Path.Circle(line.pivot, lineWidth/2)
 				break
 			case 1:
-				c = new Path.Circle(line.pivot, lineWidth)
-				break
-			case 2:
-				c = new Path.Circle(line.pivot, circleRadius)
+				c = new Path.Circle(line.pivot, Math.max(circleRadius, lineWidth/2))
 				break
 		}
 		
@@ -156,8 +261,7 @@ onmessage = function(e) {
 			shapeGroup.addChild(shape)
 		}
 		shapeGroup.pivot = shapeGroup.children[Math.floor(shapeGroup.children.length/2)].pivot
-		let c = new Path.Circle(shapeGroup.pivot, 3)
-		c.fillColor = "red"
+		
 		shapeGroup.position = view.center
 		
 		
