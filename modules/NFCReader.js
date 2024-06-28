@@ -20,13 +20,21 @@ export default class NFCReader extends HTMLElement {
 		container.innerHTML = `
 			<style>
 				svg{
-					margin-bottom: 50vh;
+					filter: drop-shadow(-10px 10px 20px rgba(0, 0, 0, .4));
+					width: min(50vh, 80vw);
+					height: min(50vh, 80vw);
+					align-self: center;
+				}
+				section{
+					width: 100%;
+					height: 100vh;
+					display: flex;
+					justify-content: space-around;
 				}
 			</style>
 			<div id="content">
 				<h1>${this.uid}</h1>
 				<h1>${this.tapcount}</h1>
-				<p>hehehiohoi</p>
 				<!-- <button id="save">saveSticker</button> -->
 			</div>
 		`;
@@ -92,7 +100,11 @@ export default class NFCReader extends HTMLElement {
 			newSVG.getElementById("clip-1").id = `clip-${tapcount}`
 			//console.log("clip", newSVG.querySelector('[clip-path="url(#clip-1)"]'))
 			newSVG.querySelector('[clip-path="url(#clip-1)"]').setAttribute("clip-path", `url(#clip-${tapcount})`)
-			this.shadow.getElementById("content").appendChild(newSVG)
+			
+			let section = document.createElement("section")
+			section.appendChild(newSVG)
+			
+			this.shadow.getElementById("content").appendChild(section)
 			if(tapcount > 0){
 				this.createImage(uid, tapcount-1)
 			}

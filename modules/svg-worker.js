@@ -49,6 +49,7 @@ onmessage = function(e) {
 	postMessage({svg: paper.project.exportJSON(), mainColor: mainColor.toCSS(), col1: col1.toCSS(), col2:col2.toCSS()});
 	
 	function createBigCutout(rot, rot2, mainShape, flip1, flip2){
+		
 		let l = (lineWidth + lineRadius*2) 
 		let dir1 = new Point(0,1).normalize(l / Math.sin( (rot2-rot)* Math.PI / 180  )).rotate(rot) 
 		let dir2 = new Point(0,1).normalize(l / Math.sin( (rot2-rot)* Math.PI / 180  )).rotate(rot2) 
@@ -65,6 +66,8 @@ onmessage = function(e) {
 				createCutout(dir1, dir2, point, mainShape, -1, -1)
 			]
 			
+			
+			
 			shapes = shapes.filter( s => s!=null)
 			shapes.forEach( s => s.remove())
 			shapes = shapes.map( s => s.intersect(mainShape))
@@ -77,6 +80,7 @@ onmessage = function(e) {
 	}
 	
 	function createCutout(dir1, dir2, point, mainShape, flip1, flip2){
+		
 		let c = new Path.Circle(point, circleRadius)
 		c.fillColor = 'black'
 		//c.remove()
@@ -145,6 +149,7 @@ onmessage = function(e) {
 			
 			let cuto = createBigCutout(rot1, rot2, outerRect)
 			let cuto2 = createBigCutout(rot1, rot2, outerRect)
+			
 			if(cuto && cuto.area < outerRect.area/5){
 				deco.push(cuto)
 			}
@@ -153,7 +158,7 @@ onmessage = function(e) {
 				deco.push(cuto2)
 			}
 			
-			
+			let tryCount = 10
 			for(let i = 0; i<TAPrng()*4+1; i++){
 				let line 
 				if(TAPrng() < 0.5){
@@ -163,9 +168,14 @@ onmessage = function(e) {
 				}
 				if(intersectsCorrect(line, outerRect, deco)){
 					deco.push(line)
+					tryCount = 10
 				}else{
 					line.remove()
 					i--
+					tryCount--
+					if(tryCount < 0){
+						break
+					}
 					//line.fillColor = "black"
 				}
 			}
