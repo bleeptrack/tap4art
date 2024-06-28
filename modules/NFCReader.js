@@ -26,6 +26,7 @@ export default class NFCReader extends HTMLElement {
 			<div id="content">
 				<h1>${this.uid}</h1>
 				<h1>${this.tapcount}</h1>
+				<p>hehehiohoi</p>
 				<!-- <button id="save">saveSticker</button> -->
 			</div>
 		`;

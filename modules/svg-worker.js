@@ -1,7 +1,6 @@
 onmessage = function(e) {
 	
 	self.importScripts('https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.15/paper-full.min.js')
-	self.importScripts('https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js')
 	self.importScripts('/node_modules/seedrandom/seedrandom.min.js')
 	
 	paper.install(this)
@@ -84,7 +83,7 @@ onmessage = function(e) {
 		
 		let p = c.getOffsetsWithTangent(dir1)
 		let p2 = c.getOffsetsWithTangent(dir2)
-		console.log(p)
+		
 		let lines = [
 			new Path.Line(c.getPointAt(p[0]), c.getPointAt(p[0]).add(dir1.multiply(5*flip1))),
 			new Path.Line(c.getPointAt(p[1]), c.getPointAt(p[1]).add(dir1.multiply(5*flip1))),
@@ -107,6 +106,7 @@ onmessage = function(e) {
 		shape = c.unite(shape)
 		c.remove()
 		
+		
 		if(mainShape.intersects(shape)){
 			//ref.clone()
 			//fin = ref.intersect(shape)
@@ -114,7 +114,9 @@ onmessage = function(e) {
 			//shape.remove()
 			
 			return shape
+			//return shape
 		}
+		shape.remove()
 		return null
 		//let fin = mainShape.intersect(shape)
 		//shape.remove()
@@ -125,7 +127,6 @@ onmessage = function(e) {
 		for(let l1 = 0; l1<arr.length; l1++){
 			for(let l2 = l1+1; l2<arr.length; l2++){
 				if(arr[l1].intersects(arr[l2])){
-					console.log("intersect", l1, l2)
 					return arr.filter((x, idx) => idx != l1 && idx != l2 )
 				}
 			}
@@ -240,11 +241,8 @@ onmessage = function(e) {
 	function createShapeGroup(rot, rot2, color){
     
 		let l = (lineWidth + lineRadius*2)
-		console.log("l", l)
 		let dirl = new Point(0,1).normalize(l / Math.sin( (rot2-rot)* Math.PI / 180  )).rotate(rot)
-		console.log(100/Math.sin( (rot2-rot)* Math.PI / 180  ))
 		let transl = new Point(0,1).normalize(l / Math.sin( (rot2-rot)* Math.PI / 180  )).rotate(rot2)
-		console.log(transl)
 		let shapeGroup = new Group([])
 		
 		
