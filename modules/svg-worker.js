@@ -9,7 +9,7 @@ onmessage = function(e) {
 	
 	this.sticker = false
 	if(e.data.tapcount < 1){
-		console.log("STICKER TIME")
+		console.log("STICKER ME")
 		this.sticker = true
 	}
 	
@@ -34,10 +34,12 @@ onmessage = function(e) {
 	mainShape.fillColor = mainColor
 	
 	let ref = mainShape.clone()
+	ref.strokeColor = mainColor
+	ref.strokeWidth = lineWidth*2
 	
 	let g = new Group([
 		mainShape,
-		mainShape.clone(),
+		ref,
 		createShapeGroup(rot1, rot2, col1),
 		createShapeGroup(rot2, rot1, col2),
 		])
