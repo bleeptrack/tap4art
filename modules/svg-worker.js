@@ -48,7 +48,9 @@ onmessage = function(e) {
 	
 	
 	
-	postMessage({svg: paper.project.exportJSON(), mainColor: mainColor.toCSS(), col1: col1.toCSS(), col2:col2.toCSS()});
+	
+	
+	postMessage({svg: paper.project.exportJSON(), mainColor: mainColor.toCSS(), col1: col1.toCSS(), col2:col2.toCSS()}, radius: circleRadius);
 	
 	function createBigCutout(rot, rot2, mainShape, flip1, flip2){
 		
