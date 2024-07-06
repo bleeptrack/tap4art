@@ -44,13 +44,26 @@ onmessage = function(e) {
 		createShapeGroup(rot2, rot1, col2),
 		])
 	g.clipped = true;
+	let finSVG = paper.project.exportJSON()
+	
+	
+
+	let bg = new Path.Rectangle([0,0], [500,500])
+	bg.fillColor =  col1.multiply(0.3).add(0.7)
+	bg.sendToBack()
+	g.position = bg.position
+	
+	var text = new PointText(g.bounds.bottomRight.add([0,15]));
+	text.justification = 'right';
+	text.fillColor = mainColor
+	text.content = 'tap4art @bleeptrack';
+	text.opacity = 0.5
+	
+	let shareSVG = paper.project.exportJSON()
 	
 	
 	
-	
-	
-	
-	postMessage({svg: paper.project.exportJSON(), mainColor: mainColor.toCSS(), col1: col1.toCSS(), col2:col2.toCSS()}, radius: circleRadius);
+	postMessage({svg: finSVG, shareSvg: shareSVG, mainColor: mainColor.toCSS(), col1: col1.toCSS(), col2:col2.toCSS(), radius: circleRadius});
 	
 	function createBigCutout(rot, rot2, mainShape, flip1, flip2){
 		

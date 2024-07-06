@@ -1,5 +1,5 @@
 'use strict';
-
+import SVGGen from "./SVG-Gen.js"
 
 export default class NFCReader extends HTMLElement {
 	
@@ -22,26 +22,6 @@ export default class NFCReader extends HTMLElement {
 		// creating the inner HTML of the editable list element
 		container.innerHTML = `
 			<style>
-				svg{
-					filter: drop-shadow(-10px 10px 20px rgba(0, 0, 0, .4));
-					width: min(50vh, 80vw);
-					height: min(50vh, 80vw);
-					align-self: center;
-					animation:  animate-shadow ease-in-out, animate-top linear;
-					animation-timeline: view();
-					animation-range: entry, exit;
-				}
-				
-				@keyframes animate-top {
-					100% { transform: translate(0,-50vh); }
-				}
-				
-				@keyframes animate-shadow {
-					0% { filter: drop-shadow(0px 0px 0px rgba(0, 0, 0, .4)); }
-					60% { filter: drop-shadow(0px 0px 0px rgba(0, 0, 0, .4)); }
-					100% { filter: drop-shadow(-10px 10px 20px rgba(0, 0, 0, .4)); }
-				}
-				
 				
 				section{
 					width: 100%;
@@ -50,69 +30,32 @@ export default class NFCReader extends HTMLElement {
 					justify-content: space-around;
 				}
 				
-				.loadin{
-					animation:  animate-shadow;
-					animation-duration: ${animationLength}s;
-				}
 				
-				.loadin g[clip-path]>g:nth-child(2) {
-					animation:  animate-right ease-in-out both;
-					animation-duration: ${animationLength}s;
-				}
-				
-				.loadin g[clip-path]>g:nth-child(3) {
-					animation:  animate-left ease-in-out both;
-					animation-duration: ${animationLength}s;
-				}
-				
-				.loadin g[clip-path]>path:first-child {
-					animation: fill-anim ease-in-out, dash ease-in-out;
-					animation-duration: ${animationLength}s;
-				}
-				
-				@keyframes animate-left {
-					0% { opacity: 0; transform: translate(-100%, -100%); }
-					80% { opacity: 1; transform: translate(0%, 0%); }
-				}
-				
-				@keyframes animate-right {
-					0% { opacity: 0; transform: translate(100%, -100%); }
-					80% { opacity: 1; transform: translate(0%, 0%); }
-				}
-				
-				g[clip-path]>g:nth-child(2) {
-					animation:  animate-right linear both;
-					animation-timeline: view();
-					animation-range: entry;
-				}
-
-				g[clip-path]>g:nth-child(3) {
-					animation:  animate-left linear both;
-					animation-timeline: view();
-					animation-range:  entry;
-				}
-				
-				g[clip-path]>path:first-child {
-					animation: fill-anim linear, dash linear;
-					animation-timeline: view();
-					animation-range: entry 0% entry 80%, entry;
-				}
-
-				@keyframes dash {
-					50% { stroke-dashoffset: 0; }
-					100% { stroke-dashoffset: 0; }
-				}
-				
-				@keyframes fill-anim {
-					0%{ fill: rgba(0,0,0,0); }
+				#popover{
+					background-color: aquamarine;
+					height: 80svh;
+					width: 80svw;
+					/* inset: 10px; */
+					/* border: black 1px; */
+					border-radius: 5vh;
+					font-size: 2em;
+					overflow: scroll;
+					box-shadow: 10px 10px 10px black;
 				}
 
 			</style>
 			<div id="content">
+				
+
+				<div id="popover" popover>
+				<p>I am a popover with more information.</p>
+				</div>
+
 				<!-- <h1>${this.uid}</h1> -->
 				<!-- <h1>${this.tapcount}</h1> -->
 				<!-- <button id="save">saveSticker</button> -->
 				<button id="share">share</button>
+				<button popovertarget="popover">Open Popover</button>
 			</div>
 		`;
 
@@ -121,12 +64,12 @@ export default class NFCReader extends HTMLElement {
 		
 		this.shadow.getElementById("share").addEventListener("click", async () => {
 			
-			alert(this.imageData)
+			alert(this.shadow.getElementById("0").imageData)
 			
-			const blob = await (await fetch(this.imageData)).blob();
+			const blob = await (await fetch(this.shadow.getElementById("0").imageData)).blob();
 			const file = new File([blob], 'tap4art.png', { type: blob.type });
 			
-			const blob2 = await (await fetch(this.imageDataSticker)).blob();
+			const blob2 = await (await fetch(this.shadow.getElementById(`${this.tapcount}`).imageData)).blob();
 			const file2 = new File([blob2], 'tap4art-sticker.png', { type: blob2.type });
 			
 			const shareData = {
@@ -160,13 +103,26 @@ export default class NFCReader extends HTMLElement {
 	}
 	
 	connectedCallback() {
-		paper.install(window)
-		paper.setup(new Size(500, 500));
-		this.loadfirst = false;
-		this.createImage(this.uid, this.tapcount)
-		//this.createImage(this.uid, 0)
+		let count = this.tapcount
+		while(count >= 0){
+			this.createSection(this.uid, count, count==this.tapcount, count==0)
+			count--
+		}
+		
+		
 	}
 	
+	createSection(uid, tapcount, loadin, addCover){
+		let svg = new SVGGen(uid, tapcount, loadin, addCover)
+		this.shadow.getElementById("content").appendChild(svg)
+		
+		let section = document.createElement("section")
+		section.appendChild(svg)
+			
+		this.shadow.getElementById("content").appendChild(section)
+	}
+	
+	/*
 	createImage(uid, tapcount){
 		
 		let worker = new Worker("/modules/svg-worker.js")
@@ -215,10 +171,7 @@ export default class NFCReader extends HTMLElement {
 			
 		})
 		
-		worker.postMessage({
-			uid: uid,
-			tapcount: tapcount
-		})
+		
 	}
 	
 	prepSVG(event, uid, tapcount){
@@ -279,7 +232,7 @@ export default class NFCReader extends HTMLElement {
 				this.createImage(uid, tapcount-1)
 			}
 	}
-	
+	*/
 	
 
 }
