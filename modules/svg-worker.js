@@ -62,9 +62,9 @@ onmessage = function(e) {
 	
 	let shareSVG = paper.project.exportJSON()
 	
-	let l = (lineWidth + lineRadius*2) 
-	let dir1 = new Point(0,1).normalize(l / Math.sin( (rot2-rot1)* Math.PI / 180  )).rotate(rot1) 
-	let dir2 = new Point(0,1).normalize(l / Math.sin( (rot2-rot1)* Math.PI / 180  )).rotate(rot2) 
+	
+	let dir1 = new Point(0,1).normalize().rotate(rot1) 
+	let dir2 = new Point(0,1).normalize().rotate(rot2) 
 	postMessage({svg: finSVG, shareSvg: shareSVG, mainColor: mainColor.toCSS(), col1: col1.toCSS(), col2:col2.toCSS(), radius: circleRadius, dir1: [dir1.x, dir1.y], dir2: [dir2.x, dir2.y]});
 	
 	function createBigCutout(rot, rot2, mainShape, flip1, flip2){

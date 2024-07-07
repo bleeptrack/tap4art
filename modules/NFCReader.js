@@ -13,8 +13,10 @@ export default class NFCReader extends HTMLElement {
 		const nfcinfo = urlParams.get('uid').split("x")
 		this.uid = nfcinfo[0]
 		this.tapcount = Number(`0x${nfcinfo[1]}`)
+		this.renderCount = this.tapcount
 		
 		let animationLength = 6
+		this.viewRange = 5
 		
 
 		const container = document.createElement('template');
@@ -22,12 +24,18 @@ export default class NFCReader extends HTMLElement {
 		// creating the inner HTML of the editable list element
 		container.innerHTML = `
 			<style>
+			
+				#content{
+					
+				}
 				
 				section{
 					width: 100%;
 					height: 70vh;
 					display: flex;
 					justify-content: space-around;
+					align-items: center;
+					
 				}
 				
 				
@@ -41,6 +49,11 @@ export default class NFCReader extends HTMLElement {
 					font-size: 2em;
 					overflow: scroll;
 					box-shadow: 10px 10px 10px black;
+				}
+				
+				svg-gen{
+					width: min(50vh, 80vw);
+					height: min(50vh, 80vw);
 				}
 
 			</style>
@@ -85,6 +98,8 @@ export default class NFCReader extends HTMLElement {
 			
 		})
 		
+		
+		
 		/*
 		this.shadow.getElementById("save").addEventListener("click", () => {
 			
@@ -103,22 +118,45 @@ export default class NFCReader extends HTMLElement {
 	}
 	
 	connectedCallback() {
-		let count = this.tapcount
-		while(count >= 0){
-			this.createSection(this.uid, count, count==this.tapcount, count==0)
-			count--
+		this.observer = new IntersectionObserver((entries) => {
+			if(entries[0].isIntersecting){
+				this.addNextSection()
+			}
+			console.log(entries[0].isIntersecting)
+		}, {threshold: 0.5});
+		
+		while(this.renderCount > this.tapcount-this.viewRange){
+			this.addNextSection()
 		}
 		
+		//console.log(this.shadow.getElementById("content").lastChild)
+		this.observer.observe(this.shadow.getElementById("content").lastChild)
 		
 	}
 	
-	createSection(uid, tapcount, loadin, addCover){
-		let svg = new SVGGen(uid, tapcount, loadin, addCover)
+
+	
+	addNextSection(){
+		console.log("fire", this.renderCount)
+		if(this.renderCount >= 0){
+			this.createSection(this.uid, this.renderCount, this.renderCount==this.tapcount, this.renderCount==0, this.renderCount<this.tapcount)
+			this.renderCount--
+		}
+	}
+	
+	createSection(uid, tapcount, loadin, addCover, scrollAnim){
+		let svg = new SVGGen(uid, tapcount, loadin, addCover, scrollAnim)
 		
 		let section = document.createElement("section")
 		section.appendChild(svg)
 			
 		this.shadow.getElementById("content").appendChild(section)
+		this.observer.disconnect()
+		
+		if(tapcount <= this.tapcount-this.viewRange){
+			console.log("observe", tapcount)
+			this.observer.observe(section)
+		}
 	}
 	
 	/*
