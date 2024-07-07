@@ -44,6 +44,7 @@ onmessage = function(e) {
 		createShapeGroup(rot2, rot1, col2),
 		])
 	g.clipped = true;
+	g.strokeCap = 'round'
 	let finSVG = paper.project.exportJSON()
 	
 	
@@ -61,9 +62,10 @@ onmessage = function(e) {
 	
 	let shareSVG = paper.project.exportJSON()
 	
-	
-	
-	postMessage({svg: finSVG, shareSvg: shareSVG, mainColor: mainColor.toCSS(), col1: col1.toCSS(), col2:col2.toCSS(), radius: circleRadius});
+	let l = (lineWidth + lineRadius*2) 
+	let dir1 = new Point(0,1).normalize(l / Math.sin( (rot2-rot1)* Math.PI / 180  )).rotate(rot1) 
+	let dir2 = new Point(0,1).normalize(l / Math.sin( (rot2-rot1)* Math.PI / 180  )).rotate(rot2) 
+	postMessage({svg: finSVG, shareSvg: shareSVG, mainColor: mainColor.toCSS(), col1: col1.toCSS(), col2:col2.toCSS(), radius: circleRadius, dir1: [dir1.x, dir1.y], dir2: [dir2.x, dir2.y]});
 	
 	function createBigCutout(rot, rot2, mainShape, flip1, flip2){
 		
@@ -234,7 +236,15 @@ onmessage = function(e) {
 		let dir2 = new Point(0,1).normalize(l / Math.sin( (rot2-rot)* Math.PI / 180  )).rotate(rot2) 
 		
 		let line = new Path.Rectangle([0,0], [900,lineWidth])
-		line.pivot = line.bounds.leftCenter
+		let endC = new Path.Circle(line.bounds.rightCenter, lineWidth/2)
+		let pivotSave = line.bounds.leftCenter.clone()
+		
+		let tmp = line.unite(endC)
+		line.remove()
+		endC.remove()
+		line = tmp
+		
+		line.pivot = pivotSave
 		line.rotate(dir1.angle)
 		line.position = view.center
 		line.translate(dir1.multiply(Math.round(TAPrng()*3)))

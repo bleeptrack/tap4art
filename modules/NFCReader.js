@@ -114,7 +114,6 @@ export default class NFCReader extends HTMLElement {
 	
 	createSection(uid, tapcount, loadin, addCover){
 		let svg = new SVGGen(uid, tapcount, loadin, addCover)
-		this.shadow.getElementById("content").appendChild(svg)
 		
 		let section = document.createElement("section")
 		section.appendChild(svg)
