@@ -23,37 +23,105 @@ export default class NFCReader extends HTMLElement {
 
 		// creating the inner HTML of the editable list element
 		container.innerHTML = `
+			<link href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&display=swap" rel="stylesheet">
 			<style>
-			
+				@import url('https://fonts.googleapis.com/css2?family=Major+Mono+Display&display=swap');
+				
 				#content{
 					
 				}
 				
+				span{
+					width: 80vw;
+					text-align: center;
+				}
+				
 				section{
+					font-family: "Major Mono Display", monospace;
+					font-weight: 400;
+					font-style: normal;
 					width: 100%;
 					height: 70vh;
 					display: flex;
+					flex-direction: column;
 					justify-content: space-around;
 					align-items: center;
-					
+					color: none;
+				}
+				
+				@keyframes animate-top {
+					100% { transform: translate(0,-50vh); }
+				}
+				
+				#arrow-down {
+					animation: bounce 2s ease infinite;
+					animation-delay: 8s;
+				}
+				@keyframes bounce {
+					0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+					40% {transform: translateY(-30px);}
+					60% {transform: translateY(-15px);}
+				}
+				
+				section:first-of-type{
+					animation:  animate-top linear;
+					animation-timeline: view();
+					animation-range: exit;
+					height: 100svh !important;
+				
 				}
 				
 				
 				#popover{
-					background-color: aquamarine;
+					font-family: "Major Mono Display", monospace;
+					font-weight: 400;
+					font-style: normal;
+					padding: 5vw;
+					box-sizing: border-box;
 					height: 80svh;
 					width: 80svw;
-					/* inset: 10px; */
-					/* border: black 1px; */
+					text-align: center;
 					border-radius: 5vh;
-					font-size: 2em;
-					overflow: scroll;
-					box-shadow: 10px 10px 10px black;
+					font-size: 1em;
+				}
+				
+				#popover a{
+					color:white;
+				}
+				
+				#popover>div{
+					display: flex;
+					flex-direction: column;
+					justify-content: space-around;
+					height: 100%;
 				}
 				
 				svg-gen{
 					width: min(50vh, 80vw);
 					height: min(50vh, 80vw);
+				}
+				
+				#buttonbox {
+					width: 70vw;
+					display: flex;
+					justify-content: space-around;
+					flex-direction: row;
+				}	
+				
+				#buttonbox button{
+					background: none;
+					border:none;
+				}
+				
+				
+				h1{
+					font-size: 2.5em;
+					margin-block-end: 0em;
+				}
+				
+				::backdrop {
+					background-color: black;
+					opacity: 0.7;
 				}
 
 			</style>
@@ -61,42 +129,28 @@ export default class NFCReader extends HTMLElement {
 				
 
 				<div id="popover" popover>
-				<p>I am a popover with more information.</p>
+					<div>
+						<div>
+						<p>you discovered a sticker from the generative art project TAP4ART !</p>
+						<p>each sticker contains an nfc tag, which your phone can scan.</p>
+						<p>the tag stores two informations: it's own ID and a SCAN COUNT.</p>
+						<p>an algorithm creates:</br> a unique style (color, dimensions) from the ID and a unique shape arrangement from the SCAN COUNT.</p>
+						<p>so each sticker has a different look and each scan creates a completely new image!<p>
+						</div>
+						<p><a href="info.bleeptrack.de">by bleeptrack</a></br><a href="https://github.com/bleeptrack/tap4art">code on github</a></p>
+					</div>
 				</div>
 
-				<!-- <h1>${this.uid}</h1> -->
-				<!-- <h1>${this.tapcount}</h1> -->
 				<!-- <button id="save">saveSticker</button> -->
-				<button id="share">share</button>
-				<button popovertarget="popover">Open Popover</button>
+				<!-- <button id="share">share</button> -->
+				<!-- <button popovertarget="popover">Open Popover</button> -->
 			</div>
 		`;
 
 		//background-image: url("${this.mediaPath}");
 		this.shadow.appendChild(container.content.cloneNode(true));
 		
-		this.shadow.getElementById("share").addEventListener("click", async () => {
-			
-			alert(this.shadow.getElementById("0").imageData)
-			
-			const blob = await (await fetch(this.shadow.getElementById("0").imageData)).blob();
-			const file = new File([blob], 'tap4art.png', { type: blob.type });
-			
-			const blob2 = await (await fetch(this.shadow.getElementById(`${this.tapcount}`).imageData)).blob();
-			const file2 = new File([blob2], 'tap4art-sticker.png', { type: blob2.type });
-			
-			const shareData = {
-				text: "I created this image by scanning a sticker by @bleeptrack",
-				files: [file, file2]
-			}
-			
-			try{
-				navigator.share(shareData)
-			}catch (error) {
-				alert(error.message)
-			}
-			
-		})
+		
 		
 		
 		
@@ -125,7 +179,7 @@ export default class NFCReader extends HTMLElement {
 			console.log(entries[0].isIntersecting)
 		}, {threshold: 0.5});
 		
-		while(this.renderCount > this.tapcount-this.viewRange){
+		while(this.renderCount > this.tapcount-this.viewRange && this.renderCount >= 0){
 			this.addNextSection()
 		}
 		
@@ -148,7 +202,57 @@ export default class NFCReader extends HTMLElement {
 		let svg = new SVGGen(uid, tapcount, loadin, addCover, scrollAnim)
 		
 		let section = document.createElement("section")
+		
+		if(tapcount==this.tapcount){
+			let txt = `
+			<h1>scan ${this.tapcount}</h1>
+			<span>you revealed a new image:<span>
+			`
+			
+			
+			section.insertAdjacentHTML("beforeend", txt);
+			
+			svg.addEventListener("created", (data) => {
+				console.log("created", data.detail)
+				this.info = data.detail
+				
+				
+				//let bgColor = `color-mix(in srgb, ${event.data.col1} 30%, white)`
+				//document.body.style.backgroundColor = bgColor
+				
+				let mix = `color-mix(in srgb, ${data.detail.col1} 50%, black)`
+				section.style.color = mix
+				this.shadow.getElementById("popover").style.backgroundColor = `color-mix(in srgb, ${data.detail.mainColor} 10%, black)`
+				this.shadow.getElementById("popover").style.color = `color-mix(in srgb, ${data.detail.col1} 30%, white)`
+				this.shadow.querySelectorAll(".icon").forEach( elem => elem.setAttribute("fill", mix) )
+				
+				
+			})
+		}
+		
 		section.appendChild(svg)
+		
+		if(tapcount==this.tapcount){
+			let d = `
+			<div id="buttonbox">
+				<button popovertarget="popover"><svg class="icon" xmlns="http://www.w3.org/2000/svg" height="10vw" viewBox="0 -960 960 960" width="10vw" fill="black"><path d="M478-240q21 0 35.5-14.5T528-290q0-21-14.5-35.5T478-340q-21 0-35.5 14.5T428-290q0 21 14.5 35.5T478-240Zm-36-154h74q0-33 7.5-52t42.5-52q26-26 41-49.5t15-56.5q0-56-41-86t-97-30q-57 0-92.5 30T342-618l66 26q5-18 22.5-39t53.5-21q32 0 48 17.5t16 38.5q0 20-12 37.5T506-526q-44 39-54 59t-10 73Zm38 314q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg></button>
+				<button id="share-btn"><svg class="icon" xmlns="http://www.w3.org/2000/svg" height="10vw" viewBox="0 -960 960 960" width="10vw" fill="black"><path d="M720-80q-50 0-85-35t-35-85q0-7 1-14.5t3-13.5L322-392q-17 15-38 23.5t-44 8.5q-50 0-85-35t-35-85q0-50 35-85t85-35q23 0 44 8.5t38 23.5l282-164q-2-6-3-13.5t-1-14.5q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35q-23 0-44-8.5T638-672L356-508q2 6 3 13.5t1 14.5q0 7-1 14.5t-3 13.5l282 164q17-15 38-23.5t44-8.5q50 0 85 35t35 85q0 50-35 85t-85 35Zm0-640q17 0 28.5-11.5T760-760q0-17-11.5-28.5T720-800q-17 0-28.5 11.5T680-760q0 17 11.5 28.5T720-720ZM240-440q17 0 28.5-11.5T280-480q0-17-11.5-28.5T240-520q-17 0-28.5 11.5T200-480q0 17 11.5 28.5T240-440Zm480 280q17 0 28.5-11.5T760-200q0-17-11.5-28.5T720-240q-17 0-28.5 11.5T680-200q0 17 11.5 28.5T720-160Zm0-600ZM240-480Zm480 280Z"/></svg></button>
+			</div>`
+			section.insertAdjacentHTML("beforeend", d);
+			
+			let bottom = `<div>
+				<span>discover previous scans</span>
+				<span><svg class="icon" id="arrow-down" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="black"><path d="M480-200 240-440l56-56 184 183 184-183 56 56-240 240Zm0-240L240-680l56-56 184 183 184-183 56 56-240 240Z"/></svg></span>
+			</div>`
+			if(this.tapcount == 1){
+				bottom = `<div>
+				<span>wow, first scan!</span>
+				</div>`
+			}
+			section.insertAdjacentHTML("beforeend", bottom);
+		}
+			
+		
 			
 		this.shadow.getElementById("content").appendChild(section)
 		this.observer.disconnect()
@@ -156,6 +260,53 @@ export default class NFCReader extends HTMLElement {
 		if(tapcount <= this.tapcount-this.viewRange){
 			console.log("observe", tapcount)
 			this.observer.observe(section)
+		}
+		
+		if(tapcount==this.tapcount){
+			this.shadow.getElementById("share-btn").addEventListener("click", async () => {
+			
+				//alert(this.shadow.getElementById("0").imageData)
+				//console.log(this.shadow.getElementById(`${this.tapcount}`))
+				
+				const blob = await (await fetch(this.shadow.getElementById(`${this.tapcount}`).getShare())).blob();
+				const file = new File([blob], 'tap4art.png', { type: blob.type });
+				
+				//const blob2 = await (await fetch(this.shadow.getElementById(`${this.tapcount}`).imageData)).blob();
+				//const file2 = new File([blob2], 'tap4art-sticker.png', { type: blob2.type });
+				
+				const shareData = {
+					text: "I created this image by scanning a sticker by @bleeptrack",
+					files: [file]
+				}
+				
+				try{
+					navigator.share(shareData)
+				}catch (error) {
+					alert(error.message)
+				}
+				
+			})
+		}
+		
+		if(tapcount==0){
+			
+			this.shadow.getElementById("0").addEventListener("dblclick", async () => {
+				
+				
+				var svg = this.shadow.getElementById(`0`).getSVG().outerHTML
+				console.log(svg, this.shadow.getElementById(`0`).getSVG())
+				var svgBlob = new Blob([svg], {type:"image/svg+xml;charset=utf-8"});
+				var svgUrl = URL.createObjectURL(svgBlob);
+				var downloadLink = document.createElement("a");
+				downloadLink.href = svgUrl;
+				downloadLink.download = `tap4art-${this.uid}-${this.tapcount}.svg`;
+				document.body.appendChild(downloadLink);
+				downloadLink.click();
+				document.body.removeChild(downloadLink);
+				
+				
+			})
+			this.shadow.getElementById("0").parentNode.style.marginBottom = "30vh"
 		}
 	}
 	

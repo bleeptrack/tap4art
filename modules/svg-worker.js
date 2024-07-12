@@ -36,6 +36,8 @@ onmessage = function(e) {
 	let ref = mainShape.clone()
 	ref.strokeColor = mainColor
 	ref.strokeWidth = lineWidth*2
+	let shadowref = mainShape.clone()
+	shadowref.remove()
 	
 	let g = new Group([
 		mainShape,
@@ -57,14 +59,19 @@ onmessage = function(e) {
 	var text = new PointText(g.bounds.bottomRight.add([0,15]));
 	text.justification = 'right';
 	text.fillColor = mainColor
-	text.content = 'tap4art @bleeptrack';
+	text.content = `${e.data.uid} #${e.data.tapcount} - tap4art @bleeptrack`;
 	text.opacity = 0.5
+	
+	shadowref.insertAbove(bg)
+	shadowref.position = g.position
+	shadowref.shadowColor = 'rgba(0,0,0,0.5)'
+    shadowref.shadowBlur= 40
 	
 	let shareSVG = paper.project.exportJSON()
 	
 	
-	let dir1 = new Point(0,1).normalize().rotate(rot1) 
-	let dir2 = new Point(0,1).normalize().rotate(rot2) 
+	let dir1 = new Point(0,1).normalize(300).rotate(rot1) 
+	let dir2 = new Point(0,1).normalize(300).rotate(rot2) 
 	postMessage({svg: finSVG, shareSvg: shareSVG, mainColor: mainColor.toCSS(), col1: col1.toCSS(), col2:col2.toCSS(), radius: circleRadius, dir1: [dir1.x, dir1.y], dir2: [dir2.x, dir2.y]});
 	
 	function createBigCutout(rot, rot2, mainShape, flip1, flip2){
