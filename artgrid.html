@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TAP FOR ART</title>
 	<!-- <link href="style.css" rel="stylesheet"> -->
-	<link href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&display=swap" rel="stylesheet">
+
 	<script src="./node_modules/paper/dist/paper-core.js"></script>
 </head>
 <style>
@@ -14,15 +14,21 @@
 		margin: 0;
 		padding: 0;
 		border: 0;
+		height: 100%;
+		width: 100%;
 	}
 	body{
-		
+		height: min(100vh, 100vw) !important; 
+		width: min(100vh, 100vw) !important;
+		display: flex;
+		justify-content: center;
+		align-items: center;
 	}
 </style>
 <body>
-	<nfc-reader></nfc-reader>
+	<art-grid></art-grid>
 
-	<script type="module" src="/modules/NFCReader.js"></script>
+	<script type="module" src="/modules/ArtGrid.js"></script>
 	
 </body>
 
