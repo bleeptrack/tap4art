@@ -1,4 +1,6 @@
 # tap4art
+![sticker selection](https://github.com/bleeptrack/tap4art/blob/main/img/DSC00441.jpg)
+
 "tap4art" is a sticker street art project that playfully connects digital generative art with street art sticker culture. Each sticker contains an nfc tag, which most smartphones can scan. The integrated tag stores two informations: it's own ID and a SCAN COUNT. When tapped, an algorithm creates: a unique style (color, dimensions) from the ID and a unique shape arrangement from the scan count. So each sticker has a different look and each scan creates a completely new image! 
 
 ## Example
@@ -17,5 +19,8 @@ What you need is:
 
 Then just write ```tap4art.bleeptrack.de``` as URL onto your tag and activate both features. It should look something like this:
 
+![tagwriter example](https://github.com/bleeptrack/tap4art/blob/main/img/tagwriter.jpg)
+
 ## Creation journey
-![youtube video](https://youtu.be/G-BeRXeH5V0)
+Video Documentation on Youtube:
+[![](https://github.com/bleeptrack/tap4art/blob/main/img/WiP73.jpg)](https://youtu.be/G-BeRXeH5V0)
