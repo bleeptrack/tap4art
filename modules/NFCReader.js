@@ -10,6 +10,12 @@ export default class NFCReader extends HTMLElement {
 		this.shadow = this.attachShadow({ mode: 'open' });
 		
 		const urlParams = new URLSearchParams(window.location.search);
+		
+		if(!urlParams.get('uid')){
+			console.log("forwarding...")
+			window.location.href = "https://github.com/bleeptrack/tap4art";
+		}
+		
 		const nfcinfo = urlParams.get('uid').split("x")
 		this.uid = nfcinfo[0]
 		this.tapcount = Number(`0x${nfcinfo[1]}`)
@@ -137,7 +143,7 @@ export default class NFCReader extends HTMLElement {
 						<p>an algorithm creates:</br> a unique style (color, dimensions) from the ID and a unique shape arrangement from the SCAN COUNT.</p>
 						<p>so each sticker has a different look and each scan creates a completely new image!<p>
 						</div>
-						<p><a href="info.bleeptrack.de">by bleeptrack</a></br><a href="https://github.com/bleeptrack/tap4art">code on github</a></p>
+						<p><a href="https://info.bleeptrack.de">by bleeptrack</a></br><a href="https://github.com/bleeptrack/tap4art">code on github</a></p>
 					</div>
 				</div>
 
